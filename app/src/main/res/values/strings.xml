@@ -12,4 +12,7 @@
     <string name="minute">m</string>
     <string name="hour">h</string>
 
+    <string name="no_permission_msg">Sorry, without location permission, I am unable to serve you</string>
+    <string name="confirm">confirm</string>
+
 </resources>

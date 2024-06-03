@@ -1,6 +1,7 @@
 package com.niko.amap
 
 import android.Manifest
+import android.app.AlertDialog
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
@@ -90,8 +91,6 @@ class MainActivity : ComponentActivity() {
 
     private lateinit var locationPermissionRequest: ActivityResultLauncher<Array<String>>
 
-    private lateinit var backgroundLocationPermissionRequest: ActivityResultLauncher<Array<String>>
-
     private val vm by viewModels<MainViewModel>()
 
     // endregion
@@ -116,6 +115,7 @@ class MainActivity : ComponentActivity() {
         initMap(savedInstanceState)
         registerPermissionResultReceiver()
         checkLocationPermission()
+        MapUtils.initMapLocationClient(applicationContext)
     }
 
     override fun onDestroy() {
@@ -173,29 +173,25 @@ class MainActivity : ComponentActivity() {
             when {
                 permissions.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false) -> {
                     // Precise location access granted.
-                    requestBackgroundLocationPermission()
+//                    requestBackgroundLocationPermission()
+
+                    // Make the map effective by setting locationStyle
+                    map.myLocationStyle = locationStyle
                 }
 
                 permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false) -> {
                     // Only approximate location access granted.
-
+                    MapUtils.initMapLocationClient(applicationContext)
                 }
 
-                else -> {
-                    // No location access granted.
-                }
-            }
-        }
-
-        backgroundLocationPermissionRequest = registerForActivityResult(
-            ActivityResultContracts.RequestMultiplePermissions()
-        ) { permissions ->
-            when {
                 permissions.getOrDefault(Manifest.permission.ACCESS_BACKGROUND_LOCATION, false) -> {
                     // Precise location access granted.
                 }
 
                 else -> {
+                    AlertDialog.Builder(this).setMessage(R.string.no_permission_msg).setPositiveButton(
+                        R.string.confirm
+                    ) { dialog, which -> finish() }.show()
                     // No location access granted.
                 }
             }

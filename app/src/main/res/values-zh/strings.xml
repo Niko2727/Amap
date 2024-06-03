@@ -14,4 +14,7 @@
     <string name="minute">分钟</string>
     <string name="hour">小时</string>
 
+    <string name="no_permission_msg">对不起，没有定位权限的前提下，我无法为你服务</string>
+    <string name="confirm">确定</string>
+
 </resources>
