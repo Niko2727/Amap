@@ -123,11 +123,15 @@ class NaviActivity : ComponentActivity() {
             super.onArriveDestination()
             Log.d(TAG, "onArriveDestination() called")
             vm.onNaviEnd(this@NaviActivity)
+            // 到达终点后停止定位
+            map.isMyLocationEnabled = false
         }
 
         override fun onEndEmulatorNavi() {
             super.onEndEmulatorNavi()
             vm.onNaviEnd(this@NaviActivity)
+            // 到达终点后停止定位
+            map.isMyLocationEnabled = false
         }
     }
 
