@@ -5,6 +5,7 @@ import android.app.AlertDialog
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -25,6 +26,7 @@ import com.amap.api.maps.model.animation.ScaleAnimation
 import com.amap.api.navi.AmapNaviType
 import com.amap.api.navi.model.NaviLatLng
 import com.niko.amap.databinding.ActivityMainBinding
+import com.niko.amap.utils.NetworkHelper
 
 
 class MainActivity : ComponentActivity() {
@@ -91,6 +93,8 @@ class MainActivity : ComponentActivity() {
 
     private val vm by viewModels<MainViewModel>()
 
+    private val networkHelper = NetworkHelper()
+
     // endregion
 
     // region lifecycle
@@ -118,6 +122,7 @@ class MainActivity : ComponentActivity() {
         registerPermissionResultReceiver()
         checkLocationPermission()
         MapUtils.initMapLocationClient(applicationContext)
+        networkHelper.register(this) { Toast.makeText(this@MainActivity, R.string.network_disconnected, Toast.LENGTH_LONG).show() }
     }
 
     override fun onDestroy() {
@@ -125,6 +130,7 @@ class MainActivity : ComponentActivity() {
         super.onDestroy()
         //在activity执行onDestroy时执行mMapView.onDestroy()，销毁地图
         mapView.onDestroy()
+        networkHelper.unregister()
     }
 
     override fun onResume() {
@@ -321,7 +327,8 @@ class MainActivity : ComponentActivity() {
     private fun changeLocateMode(zoomLevel: Float, tilt: Float, myLocationStyle: Int, tryAgain: Boolean = true) {
         Log.i(TAG, "changeLocateMode() called with: zoomLevel = $zoomLevel, tilt = $tilt, mylocationStyle = $myLocationStyle,tryAgain = $tryAgain")
 
-        val changeLocationType = locationStyle.myLocationType != myLocationStyle
+        locationStyle.myLocationType(myLocationStyle)
+        map.myLocationStyle = locationStyle
 
         if (getUserLatlng() == null) {
             Log.i(TAG, "changeLocateMode() return due to getUserLatlng() is null")
@@ -329,21 +336,8 @@ class MainActivity : ComponentActivity() {
         }
         map.stopAnimation()
         locateAnimating = true
-        map.animateCamera(
-            newCameraPosition(CameraPosition(getUserLatlng(), zoomLevel, tilt, 0f)),
-            cameraAnimationDuration,
-            object : CameraAnimationCallback() {
-                override fun animated(cancel: Boolean) {
-                    locateAnimating = false
-                    Log.i(TAG, "changeLocateMode animated cancel = $cancel")
-
-                    if (cancel && tryAgain) changeLocateMode(zoomLevel, tilt, myLocationStyle, false)
-                    else if (changeLocationType) {
-                        locationStyle.myLocationType(myLocationStyle)
-                        map.myLocationStyle = locationStyle
-                    }
-                }
-            })
+        map.moveCamera(newCameraPosition(CameraPosition(getUserLatlng(), zoomLevel, tilt, 0f)))
+        locateAnimating = false
     }
 
     // endregion
@@ -376,7 +370,7 @@ class MainActivity : ComponentActivity() {
                 }
 
                 MainViewModel.LocationStyle.Follow -> {
-                    changeLocateMode(followZoomLevel, tilt3D, MyLocationStyle.LOCATION_TYPE_LOCATION_ROTATE)
+                    changeLocateMode(followZoomLevel, tilt3D, MyLocationStyle.LOCATION_TYPE_MAP_ROTATE)
                 }
 
                 else -> {

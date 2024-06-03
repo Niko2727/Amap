@@ -15,4 +15,6 @@
     <string name="no_permission_msg">Sorry, without location permission, I am unable to serve you</string>
     <string name="confirm">confirm</string>
 
+    <string name="network_disconnected">Network disconnected</string>
+
 </resources>

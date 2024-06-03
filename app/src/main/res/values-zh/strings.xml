@@ -17,4 +17,6 @@
     <string name="no_permission_msg">对不起，没有定位权限的前提下，我无法为你服务</string>
     <string name="confirm">确定</string>
 
+    <string name="network_disconnected">网络断开</string>
+
 </resources>

@@ -85,6 +85,7 @@ class NaviActivity : ComponentActivity() {
         override fun onCalculateRouteSuccess(p0: AMapCalcRouteResult?) {
             super.onCalculateRouteSuccess(p0)
 
+            // 重新规划路线时，移除之前的路线
             routeOverLay?.removeFromMap()
             routeOverLay?.destroy()
 
