@@ -1,0 +1,45 @@
+<layout>
+
+    <data>
+
+        <import type="androidx.lifecycle.LiveData" />
+
+        <import type="android.view.View" />
+
+        <variable
+            name="naviEndInfo"
+            type="LiveData&lt;String&gt;" />
+
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <com.amap.api.navi.AMapNaviView
+            android:id="@+id/navi_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+
+        <TextView
+            android:id="@+id/navi_end_info"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@color/white"
+            android:padding="@dimen/button_padding"
+            android:text="@{naviEndInfo}"
+            android:textColor="@color/black"
+            android:textSize="18sp"
+            android:visibility="@{naviEndInfo.length() == 0? View.GONE : View.VISIBLE}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="总距离: 18米\n预计耗时:1分钟\n实际耗时:2分钟" />
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

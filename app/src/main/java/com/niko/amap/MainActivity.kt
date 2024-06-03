@@ -22,10 +22,7 @@ import com.amap.api.maps.model.MarkerOptions
 import com.amap.api.maps.model.MyLocationStyle
 import com.amap.api.maps.model.Poi
 import com.amap.api.maps.model.animation.ScaleAnimation
-import com.amap.api.navi.AmapNaviPage
-import com.amap.api.navi.AmapNaviParams
-import com.amap.api.navi.AmapNaviType
-import com.amap.api.navi.AmapPageType
+import com.amap.api.navi.model.NaviLatLng
 import com.niko.amap.databinding.ActivityMainBinding
 
 
@@ -285,7 +282,7 @@ class MainActivity : ComponentActivity() {
 
         with(map.uiSettings) {
             isMyLocationButtonEnabled = false // 设置默认定位按钮是否显示，非必需设置。
-            isZoomControlsEnabled = false    // 设置缩放按钮
+            isZoomControlsEnabled = true    // 设置缩放按钮
         }
     }
 
@@ -301,6 +298,8 @@ class MainActivity : ComponentActivity() {
             setAnimation(markerAnimation)
             startAnimation()
         }
+
+        navigate(poi)
     }
 
     private fun getUserLatlng(): LatLng? {
@@ -341,13 +340,12 @@ class MainActivity : ComponentActivity() {
 
     // region navigate
 
-    private fun navigate(endPoint: Poi, naviType: AmapNaviType, pageType: AmapPageType) {
+    private fun navigate(endPoint: Poi) {
 
-        // 组件参数配置
-        val params = AmapNaviParams(null, null, endPoint, naviType, pageType)
-
-        // 启动组件
-        AmapNaviPage.getInstance().showRouteActivity(applicationContext, params, null)
+        NaviActivity.start(
+            this, NaviLatLng(map.myLocation.latitude, map.myLocation.longitude),
+            NaviLatLng(endPoint.coordinate.latitude, endPoint.coordinate.longitude), false
+        )
     }
 
     // endregion

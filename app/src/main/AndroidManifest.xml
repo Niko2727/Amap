@@ -50,6 +50,12 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".NaviActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize|navigation"
+            android:exported="true"
+            android:theme="@style/Theme.Amap"/>
+
         <!--Amap-->
         <meta-data
             android:name="com.amap.api.v2.apikey"

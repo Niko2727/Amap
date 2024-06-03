@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">地图</string>
+
+
+    <string name="distance">距离</string>
+    <string name="real_duration">实际耗时</string>
+    <string name="estimated_duration">预计耗时</string>
+
+    <string name="meter">米</string>
+    <string name="kilometer">千米</string>
+    <string name="second">秒</string>
+    <string name="minute">分钟</string>
+    <string name="hour">小时</string>
+
+</resources>

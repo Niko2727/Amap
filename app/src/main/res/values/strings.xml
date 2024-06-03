@@ -1,3 +1,15 @@
 <resources>
     <string name="app_name">Amap</string>
+
+
+    <string name="distance">Distance</string>
+    <string name="real_duration">Actual time consumption</string>
+    <string name="estimated_duration">Estimated time consumption</string>
+
+    <string name="meter">m</string>
+    <string name="kilometer">km</string>
+    <string name="second">s</string>
+    <string name="minute">m</string>
+    <string name="hour">h</string>
+
 </resources>
