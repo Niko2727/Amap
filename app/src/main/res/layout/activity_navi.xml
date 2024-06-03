@@ -28,7 +28,7 @@
             android:id="@+id/navi_end_info"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@color/white"
+            android:background="@drawable/btn_background"
             android:padding="@dimen/button_padding"
             android:text="@{naviEndInfo}"
             android:textColor="@color/black"

@@ -74,6 +74,8 @@ class NaviActivity : ComponentActivity() {
 
     private var startNaviLatLng = NaviLatLng()
 
+    private var locationStyle: MyLocationStyle? = null
+
     // endregion
 
     // region callback
@@ -133,6 +135,13 @@ class NaviActivity : ComponentActivity() {
             finish()
             return true
         }
+
+        override fun onLockMap(p0: Boolean) {
+            super.onLockMap(p0)
+
+            locationStyle?.myLocationType(if (p0) MyLocationStyle.LOCATION_TYPE_MAP_ROTATE else MyLocationStyle.LOCATION_TYPE_MAP_ROTATE_NO_CENTER)
+            map.myLocationStyle = locationStyle
+        }
     }
 
     // endregion
@@ -180,8 +189,8 @@ class NaviActivity : ComponentActivity() {
     private fun initMap() {
         map = naviView.map
 
-        val locationStyle = MyLocationStyle() //初始化定位蓝点样式类
-        locationStyle.myLocationType(MyLocationStyle.LOCATION_TYPE_MAP_ROTATE)
+        locationStyle = MyLocationStyle() //初始化定位蓝点样式类
+        locationStyle!!.myLocationType(MyLocationStyle.LOCATION_TYPE_MAP_ROTATE)
 
         with(map) {
             myLocationStyle = locationStyle //设置定位蓝点的Style
