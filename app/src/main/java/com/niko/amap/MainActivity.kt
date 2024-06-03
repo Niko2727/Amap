@@ -344,7 +344,7 @@ class MainActivity : ComponentActivity() {
 
         NaviActivity.start(
             this, NaviLatLng(map.myLocation.latitude, map.myLocation.longitude),
-            NaviLatLng(endPoint.coordinate.latitude, endPoint.coordinate.longitude), false
+            NaviLatLng(endPoint.coordinate.latitude, endPoint.coordinate.longitude), true
         )
     }
 

@@ -7,6 +7,8 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.viewModels
 import androidx.databinding.DataBindingUtil
+import com.amap.api.location.AMapLocationClient
+import com.amap.api.location.AMapLocationClientOption
 import com.amap.api.maps.AMap
 import com.amap.api.maps.CameraUpdateFactory
 import com.amap.api.maps.model.MyLocationStyle
@@ -15,13 +17,11 @@ import com.amap.api.navi.AMapNaviView
 import com.amap.api.navi.enums.NaviType
 import com.amap.api.navi.model.AMapCalcRouteResult
 import com.amap.api.navi.model.AMapNaviLocation
-import com.amap.api.navi.model.NaviInfo
 import com.amap.api.navi.model.NaviLatLng
 import com.amap.api.navi.view.RouteOverLay
 import com.niko.amap.databinding.ActivityNaviBinding
 
 class NaviActivity : ComponentActivity() {
-
 
     // region const
     companion object {
@@ -63,7 +63,7 @@ class NaviActivity : ComponentActivity() {
 
     private var routeOverLay: RouteOverLay? = null
 
-    private val defaultZoomLevel = 19f
+    private val defaultZoomLevel = 18f
 
     // endregion
 
@@ -71,36 +71,39 @@ class NaviActivity : ComponentActivity() {
 
     private val naviListener = object : DefaultAmapNaviListener() {
 
-        override fun onCalculateRouteSuccess(result: AMapCalcRouteResult?) {
-            super.onCalculateRouteSuccess(result)
+        override fun onCalculateRouteSuccess(p0: AMapCalcRouteResult?) {
+            super.onCalculateRouteSuccess(p0)
+
+            routeOverLay?.removeFromMap()
+            routeOverLay?.destroy()
 
             //获取返回路线的数组routIDs aMapCalcRouteResult会返回一条或者多条路线。
             //ps:多条路线是用来做多路线选择的功能但是这里我们只做简单导航。所以我们只绘制一条。
-            val routIds = result!!.routeid;
+            val routIds = p0!!.routeid
             val routeId = routIds[0]
             //通过routeId获取AMapNaviPath数据。
-            val aMapNaviPath = mapNavi.naviPaths[routeId]
+            val path = mapNavi.naviPaths[routeId]
             //然后就可以创建RouteOverLay了
-            routeOverLay = RouteOverLay(map, aMapNaviPath, this@NaviActivity)
+            routeOverLay = RouteOverLay(map, path, this@NaviActivity)
             //添加到AMapNaviView上。
             routeOverLay?.addToMap()
 
-            vm.onNaviStart(aMapNaviPath!!)
+            vm.onNaviStart(path!!)
 
             onCalculateWalkRouteSuccess()
         }
 
-        override fun onNaviInfoUpdate(naviInfo: NaviInfo?) {
-            super.onNaviInfoUpdate(naviInfo)
-            val naviLatLngList: List<NaviLatLng> = routeOverLay!!.getArrowPoints(naviInfo!!.curStep)
-            //画导航的箭头。
-            routeOverLay?.drawArrow(naviLatLngList)
-        }
+//        override fun onNaviInfoUpdate(naviInfo: NaviInfo?) {
+//            super.onNaviInfoUpdate(naviInfo)
+//            var naviLatLngList: List<NaviLatLng> = routeOverLay!!.getArrowPoints(naviInfo!!.curStep)
+//            //画导航的箭头
+//            routeOverLay?.drawArrow(naviLatLngList)
+//        }
 
-        override fun onLocationChange(aMapNaviLocation: AMapNaviLocation?) {
-            super.onLocationChange(aMapNaviLocation)
+        override fun onLocationChange(p0: AMapNaviLocation?) {
+            super.onLocationChange(p0)
             //画走过的灰色路线
-            routeOverLay?.updatePolyline(aMapNaviLocation)
+            routeOverLay?.updatePolyline(p0)
         }
 
 
@@ -137,6 +140,36 @@ class NaviActivity : ComponentActivity() {
         naviView.onCreate(savedInstanceState)
         naviView.setAMapNaviViewListener(naviViewListener)
 
+        initNavi()
+        initMap()
+        initMapLocationClient()
+
+        getNaviParam()
+    }
+
+    public override fun onResume() {
+        super.onResume()
+        naviView.onResume()
+    }
+
+    public override fun onPause() {
+        super.onPause()
+        naviView.onPause()
+    }
+
+    public override fun onDestroy() {
+        super.onDestroy()
+        naviView.onDestroy()
+
+        mapNavi.stopNavi()
+        mapNavi.removeAMapNaviListener(naviListener)
+    }
+
+    // endregion
+
+    // region map
+
+    private fun initMap() {
         map = naviView.map
 
         val locationStyle = MyLocationStyle() //初始化定位蓝点样式类
@@ -161,38 +194,52 @@ class NaviActivity : ComponentActivity() {
             isMyLocationButtonEnabled = false // 设置默认定位按钮是否显示，非必需设置。
             isZoomControlsEnabled = false    // 设置缩放按钮
         }
-
-
-        mapNavi = AMapNavi.getInstance(applicationContext)
-        mapNavi.addAMapNaviListener(naviListener)
-        mapNavi.setEmulatorNaviSpeed(60)
-        mapNavi.setUseInnerVoice(true, true)
-        getNaviParam()
     }
 
-    public override fun onResume() {
-        super.onResume()
-        naviView.onResume()
-    }
+    private fun initMapLocationClient() {
 
-    public override fun onPause() {
-        super.onPause()
-        naviView.onPause()
-    }
+        //初始化定位
+        val mLocationClient = AMapLocationClient(applicationContext)
 
-    public override fun onDestroy() {
-        super.onDestroy()
-        naviView.onDestroy()
+        //初始化AMapLocationClientOption对象
+        val mLocationOption = AMapLocationClientOption()
 
-        mapNavi.stopNavi()
-        mapNavi.removeAMapNaviListener(naviListener)
+        //设置定位模式为AMapLocationMode.Hight_Accuracy，高精度模式。
+        mLocationOption.setLocationMode(AMapLocationClientOption.AMapLocationMode.Hight_Accuracy)
+
+        //获取最近3s内精度最高的一次定位结果：
+        //设置setOnceLocationLatest(boolean b)接口为true，启动定位时SDK会返回最近3s内精度最高的一次定位结果。
+        //如果设置其为true，setOnceLocation(boolean b)接口也会被设置为true，反之不会，默认为false。
+        mLocationOption.setOnceLocationLatest(true)
+
+        //设置是否返回地址信息（默认返回地址信息）
+        mLocationOption.setNeedAddress(true)
+
+        //设置是否允许模拟位置,默认为true，允许模拟位置
+        mLocationOption.setMockEnable(false)
+
+        //关闭缓存机制
+        mLocationOption.setLocationCacheEnable(false)
+        mLocationClient.setLocationOption(mLocationOption)
+
+        //启动定位
+        mLocationClient.startLocation();
     }
 
     // endregion
 
     // region navigate
 
-    // 获取intent参数并计算路线
+    private fun initNavi() {
+        mapNavi = AMapNavi.getInstance(applicationContext)
+        mapNavi.addAMapNaviListener(naviListener)
+        mapNavi.setEmulatorNaviSpeed(30)
+        mapNavi.setUseInnerVoice(true, true)
+    }
+
+    /**
+     *  获取intent参数并计算路线
+     */
     private fun getNaviParam() {
         val intent = intent ?: return
         isGps = intent.getBooleanExtra(IS_GPS_EXTRA, false)
