@@ -7,13 +7,14 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.viewModels
 import androidx.databinding.DataBindingUtil
-import com.amap.api.location.AMapLocationClient
-import com.amap.api.location.AMapLocationClientOption
 import com.amap.api.maps.AMap
 import com.amap.api.maps.CameraUpdateFactory
+import com.amap.api.maps.model.CameraPosition
+import com.amap.api.maps.model.LatLng
 import com.amap.api.maps.model.MyLocationStyle
 import com.amap.api.navi.AMapNavi
 import com.amap.api.navi.AMapNaviView
+import com.amap.api.navi.AmapNaviType
 import com.amap.api.navi.enums.NaviType
 import com.amap.api.navi.model.AMapCalcRouteResult
 import com.amap.api.navi.model.AMapNaviLocation
@@ -28,22 +29,24 @@ class NaviActivity : ComponentActivity() {
 
         private const val TAG = "NaviActivity"
 
-        private const val START_EXTRA = "start"
-        private const val END_EXTRA = "end"
-        private const val IS_GPS_EXTRA = "is_gps"
+        private const val EXTRA_START = "start"
+        private const val EXTRA_END = "end"
+        private const val EXTRA_NAVI_TYPE = "navi_type"
+        private const val EXTRA_IS_GPS = "is_gps"
 
-        fun start(context: Context, start: NaviLatLng, end: NaviLatLng, isGps: Boolean) {
+        fun start(context: Context, start: NaviLatLng, end: NaviLatLng, naviType: AmapNaviType, isGps: Boolean) {
             val intent = Intent(context, NaviActivity::class.java)
-            intent.putExtra(START_EXTRA, start)
-            intent.putExtra(END_EXTRA, end)
-            intent.putExtra(IS_GPS_EXTRA, isGps)
+            intent.putExtra(EXTRA_START, start)
+            intent.putExtra(EXTRA_END, end)
+            intent.putExtra(EXTRA_NAVI_TYPE, naviType.name)
+            intent.putExtra(EXTRA_IS_GPS, isGps)
             context.startActivity(intent)
         }
     }
 
     // endregion
 
-    // region vew
+    // region view
 
     private lateinit var naviView: AMapNaviView
 
@@ -57,6 +60,8 @@ class NaviActivity : ComponentActivity() {
 
     private lateinit var map: AMap
 
+    private var naviType = AmapNaviType.WALK
+
     private var isGps = false
 
     private val vm by viewModels<NaviViewModel>()
@@ -64,6 +69,10 @@ class NaviActivity : ComponentActivity() {
     private var routeOverLay: RouteOverLay? = null
 
     private val defaultZoomLevel = 18f
+
+    private val defaultTilt = 45f
+
+    private var startNaviLatLng = NaviLatLng()
 
     // endregion
 
@@ -90,7 +99,7 @@ class NaviActivity : ComponentActivity() {
 
             vm.onNaviStart(path!!)
 
-            onCalculateWalkRouteSuccess()
+            this@NaviActivity.onCalculateRouteSuccess()
         }
 
 //        override fun onNaviInfoUpdate(naviInfo: NaviInfo?) {
@@ -185,8 +194,16 @@ class NaviActivity : ComponentActivity() {
                 showBuildings(true)
             }
 
-            map.moveCamera(CameraUpdateFactory.zoomTo(defaultZoomLevel))
-            map.moveCamera(CameraUpdateFactory.changeTilt(45f))
+            map.moveCamera(
+                CameraUpdateFactory.newCameraPosition(
+                    CameraPosition(
+                        LatLng(startNaviLatLng.latitude, startNaviLatLng.longitude),
+                        defaultZoomLevel,
+                        defaultTilt,
+                        0f
+                    )
+                )
+            )
         }
 
         with(map.uiSettings) {
@@ -211,12 +228,37 @@ class NaviActivity : ComponentActivity() {
      */
     private fun getNaviParam() {
         val intent = intent ?: return
-        isGps = intent.getBooleanExtra(IS_GPS_EXTRA, false)
-        val start = intent.getParcelableExtra(START_EXTRA, NaviLatLng::class.java)
-        val end = intent.getParcelableExtra(END_EXTRA, NaviLatLng::class.java)
+        startNaviLatLng = intent.getParcelableExtra(EXTRA_START, NaviLatLng::class.java) ?: NaviLatLng()
+        val end = intent.getParcelableExtra(EXTRA_END, NaviLatLng::class.java)
+        isGps = intent.getBooleanExtra(EXTRA_IS_GPS, false)
+        naviType = AmapNaviType.valueOf(intent.getStringExtra(EXTRA_NAVI_TYPE)!!)
 
-        calculateWalkRoute(start!!, end!!)
+
+        calculateRoute(startNaviLatLng, end!!, naviType)
     }
+
+
+    private fun calculateRoute(start: NaviLatLng, end: NaviLatLng, naviType: AmapNaviType) {
+
+        when (naviType) {
+            AmapNaviType.WALK -> {
+                mapNavi.calculateWalkRoute(start, end)
+            }
+
+            AmapNaviType.RIDE -> {
+                mapNavi.calculateRideRoute(start, end)
+            }
+
+            AmapNaviType.MOTORCYCLE -> {
+                mapNavi.calculateEleBikeRoute(start, end)
+            }
+
+            else -> {
+                calculateDriveRoute(start, end)
+            }
+        }
+    }
+
 
     //驾车路径规划计算,计算单条路径
     private fun calculateDriveRoute(start: NaviLatLng, end: NaviLatLng) {
@@ -239,25 +281,12 @@ class NaviActivity : ComponentActivity() {
         }
         startList.add(start)
         endList.add(end)
+
         mapNavi.calculateDriveRoute(startList, endList, wayList, strategyFlag)
     }
 
     //路径规划成功后开始导航
     fun onCalculateRouteSuccess() {
-        if (isGps) {
-            mapNavi.startNavi(NaviType.GPS)
-        } else {
-            mapNavi.startNavi(NaviType.EMULATOR)
-        }
-    }
-
-    //步行路径规划计算,计算单条路径
-    private fun calculateWalkRoute(start: NaviLatLng, end: NaviLatLng) {
-        mapNavi.calculateWalkRoute(start, end)
-    }
-
-    //路径规划成功后开始导航
-    fun onCalculateWalkRouteSuccess() {
         if (isGps) {
             mapNavi.startNavi(NaviType.GPS)
         } else {

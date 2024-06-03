@@ -3,6 +3,8 @@ package com.niko.amap
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.amap.api.maps.model.Marker
+import com.amap.api.maps.model.Poi
 
 class MainViewModel : ViewModel() {
 
@@ -21,9 +23,22 @@ class MainViewModel : ViewModel() {
     private val _projectionStyle = MutableLiveData(ProjectionStyle.TwoD)
     val projectionStyle: LiveData<ProjectionStyle> = _projectionStyle
 
+    private val _marker = MutableLiveData<Marker>()
+    val marker: LiveData<Marker> = _marker
+
+    private val _choosingNaviType = MutableLiveData(false)
+    val choosingNaviType: LiveData<Boolean> = _choosingNaviType
+
+    var poi: Poi? = null
 
     fun moveMap() {
         //After moving the map, the positioning blue dot is no longer in the middle of the screen
+        if (_locationStyle.value != LocationStyle.Loss)
+            _locationStyle.value = LocationStyle.Loss
+    }
+
+    fun clickMark() {
+        //After click marker, the positioning blue dot is no longer in the middle of the screen
         if (_locationStyle.value != LocationStyle.Loss)
             _locationStyle.value = LocationStyle.Loss
     }
@@ -49,5 +64,15 @@ class MainViewModel : ViewModel() {
         }
     }
 
+    fun clickPoi(marker: Marker, p: Poi) {
+        _marker.value?.remove()
+        _marker.value = marker
+        poi = p
+        _choosingNaviType.value = true
+    }
+
+    fun clickRouteBtn() {
+        _choosingNaviType.value = !(_choosingNaviType.value ?: false)
+    }
 
 }

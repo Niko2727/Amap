@@ -18,11 +18,11 @@ import com.amap.api.maps.MapView
 import com.amap.api.maps.MapsInitializer
 import com.amap.api.maps.model.CameraPosition
 import com.amap.api.maps.model.LatLng
-import com.amap.api.maps.model.Marker
 import com.amap.api.maps.model.MarkerOptions
 import com.amap.api.maps.model.MyLocationStyle
 import com.amap.api.maps.model.Poi
 import com.amap.api.maps.model.animation.ScaleAnimation
+import com.amap.api.navi.AmapNaviType
 import com.amap.api.navi.model.NaviLatLng
 import com.niko.amap.databinding.ActivityMainBinding
 
@@ -77,8 +77,6 @@ class MainActivity : ComponentActivity() {
 
     private val markerOption by lazy { MarkerOptions() }
 
-    private var marker: Marker? = null
-
     private val markerAnimation by lazy { ScaleAnimation(0f, 1f, 0f, 1f).apply { setDuration(500) } }
 
     // endregion
@@ -106,9 +104,13 @@ class MainActivity : ComponentActivity() {
         binding.lifecycleOwner = this
         binding.locationStyle = vm.locationStyle
         binding.projectionStyle = vm.projectionStyle
+        binding.marker = vm.marker
+        binding.choosingNaviType = vm.choosingNaviType
 
         initLocateButton()
         initProjectionButton()
+        initRouteButton()
+        initNaviTypeButton()
         subscribeViewModel()
 
         initPrivacy()
@@ -159,6 +161,17 @@ class MainActivity : ComponentActivity() {
     private fun initProjectionButton() {
         Log.i(TAG, "initProjectionButton() called")
         binding.projectionBtn.setOnClickListener { vm.clickProjectionButton() }
+    }
+
+    private fun initRouteButton() {
+        binding.routeBtn.setOnClickListener { vm.clickRouteBtn() }
+    }
+
+    private fun initNaviTypeButton() {
+        binding.walkBtn.setOnClickListener { navigate(AmapNaviType.WALK) }
+        binding.driveBtn.setOnClickListener { navigate(AmapNaviType.DRIVER) }
+        binding.rideBtn.setOnClickListener { navigate(AmapNaviType.RIDE) }
+        binding.motorcycleBtn.setOnClickListener { navigate(AmapNaviType.MOTORCYCLE) }
     }
 
     // endregion
@@ -267,6 +280,11 @@ class MainActivity : ComponentActivity() {
                 }
             })
 
+            setOnMarkerClickListener {
+                vm.clickMark()
+                true
+            }
+
             setOnMapLoadedListener {
                 showMapText(true)
                 showIndoorMap(true)
@@ -284,18 +302,14 @@ class MainActivity : ComponentActivity() {
 
     private fun onClickPOI(poi: Poi) {
         Log.i(TAG, "onClickPOI() called with: poi = $poi")
-        marker?.remove()
-        with(markerOption) {
-            position(poi.coordinate)
-            title(poi.name)
-        }
 
-        marker = map.addMarker(markerOption).apply {
+        markerOption.position(poi.coordinate)
+
+        map.addMarker(markerOption).apply {
             setAnimation(markerAnimation)
             startAnimation()
+            vm.clickPoi(this, poi)
         }
-
-        navigate(poi)
     }
 
     private fun getUserLatlng(): LatLng? {
@@ -336,11 +350,16 @@ class MainActivity : ComponentActivity() {
 
     // region navigate
 
-    private fun navigate(endPoint: Poi) {
+    private fun navigate(naviType: AmapNaviType) {
+
+        val endPoint = vm.poi ?: return
 
         NaviActivity.start(
-            this, NaviLatLng(map.myLocation.latitude, map.myLocation.longitude),
-            NaviLatLng(endPoint.coordinate.latitude, endPoint.coordinate.longitude), true
+            this,
+            NaviLatLng(map.myLocation.latitude, map.myLocation.longitude),
+            NaviLatLng(endPoint.coordinate.latitude, endPoint.coordinate.longitude),
+            naviType,
+            true
         )
     }
 

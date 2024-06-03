@@ -5,6 +5,10 @@
 
         <import type="androidx.lifecycle.LiveData" />
 
+        <import type="android.view.View" />
+
+        <import type="com.amap.api.maps.model.Marker" />
+
         <import type="com.niko.amap.MainViewModel.LocationStyle" />
 
         <import type="com.niko.amap.MainViewModel.ProjectionStyle" />
@@ -19,6 +23,14 @@
         <variable
             name="projectionStyle"
             type="LiveData&lt;ProjectionStyle&gt;" />
+
+        <variable
+            name="marker"
+            type="LiveData&lt;Marker&gt;" />
+
+        <variable
+            name="choosingNaviType"
+            type="LiveData&lt;Boolean&gt;" />
 
     </data>
 
@@ -40,7 +52,7 @@
             android:layout_marginStart="@dimen/button_margin"
             android:layout_marginTop="@dimen/button_margin"
             android:layout_marginEnd="@dimen/button_margin"
-            android:background="@color/white"
+            android:background="@drawable/btn_background"
             android:padding="@dimen/button_padding"
             android:scaleType="centerCrop"
             android:src="@{MapUtils.INSTANCE.getLocationImage(context,locationStyle)}"
@@ -56,13 +68,91 @@
             android:layout_marginStart="@dimen/button_margin"
             android:layout_marginTop="@dimen/button_margin"
             android:layout_marginEnd="@dimen/button_margin"
-            android:background="@color/white"
+            android:background="@drawable/btn_background"
             android:padding="@dimen/button_padding"
             android:scaleType="centerCrop"
             android:src="@{MapUtils.INSTANCE.getProjectionImage(context,projectionStyle)}"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/location_btn"
             tools:src="@drawable/projection_2d" />
+
+        <ImageView
+            android:id="@+id/route_btn"
+            android:layout_width="@dimen/button_width"
+            android:layout_height="@dimen/button_height"
+            android:layout_marginStart="@dimen/button_margin"
+            android:layout_marginTop="@dimen/button_margin"
+            android:layout_marginEnd="@dimen/button_margin"
+            android:background="@drawable/btn_background"
+            android:padding="@dimen/button_padding"
+            android:scaleType="centerCrop"
+            android:src="@drawable/route"
+            android:visibility="@{marker!=null? View.VISIBLE :View.GONE}"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/projection_btn" />
+
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/button_margin"
+            android:layout_marginBottom="48dp"
+            android:background="@color/white"
+            android:clickable="true"
+            android:focusable="true"
+            android:orientation="horizontal"
+            android:padding="@dimen/button_padding"
+            android:visibility="@{choosingNaviType?View.VISIBLE:View.GONE}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <ImageView
+                android:id="@+id/walk_btn"
+                android:layout_width="@dimen/button_width"
+                android:layout_height="@dimen/button_height"
+                android:layout_margin="@dimen/button_margin"
+                android:background="@drawable/btn_background"
+                android:padding="@dimen/button_padding"
+                android:scaleType="centerCrop"
+                android:src="@drawable/walk" />
+
+            <ImageView
+                android:id="@+id/drive_btn"
+                android:layout_width="@dimen/button_width"
+                android:layout_height="@dimen/button_height"
+                android:layout_margin="@dimen/button_margin"
+                android:background="@drawable/btn_background"
+                android:padding="@dimen/button_padding"
+                android:scaleType="centerCrop"
+                android:src="@drawable/drive" />
+
+            <ImageView
+                android:id="@+id/ride_btn"
+                android:layout_width="@dimen/button_width"
+                android:layout_height="@dimen/button_height"
+                android:layout_margin="@dimen/button_margin"
+                android:background="@drawable/btn_background"
+                android:padding="@dimen/button_padding"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ride" />
+
+
+            <!--摩托车或电动车要收费才能使用，先隐藏掉-->
+            <ImageView
+                android:id="@+id/motorcycle_btn"
+                android:layout_width="@dimen/button_width"
+                android:layout_height="@dimen/button_height"
+                android:layout_margin="@dimen/button_margin"
+                android:background="@drawable/btn_background"
+                android:padding="@dimen/button_padding"
+                android:scaleType="centerCrop"
+                android:src="@drawable/motorcycle"
+                android:visibility="gone" />
+
+
+        </LinearLayout>
+
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
